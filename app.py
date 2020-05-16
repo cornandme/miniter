@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, current_app
 from flask.json import JSONEncoder
 from sqlalchemy import create_engine, text
 import time
@@ -17,6 +17,29 @@ app.users = {}
 app.tweets = []
 # user id counter
 app.id_count = 1
+
+def get_user(user_id):
+    user = current_app.database.execute(text("""
+        SELECT
+            id,
+            name,
+            email,
+            profile
+        FROM
+            users
+        WHERE
+            id = :user_id
+        """), {
+            'user_id': user_id
+        }).fetchone()
+    
+    return {
+        'id': user['id'],
+        'name': user['name'],
+        'email': user['email'],
+        'profile': user['profile']
+    } if user else None
+
 
 
 def create_app(test_config = None):
