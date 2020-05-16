@@ -1,8 +1,7 @@
 from flask import Flask, jsonify, request
 from flask.json import JSONEncoder
+from sqlalchemy import create_engine, text
 import time
-
-app = Flask(__name__)
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
@@ -20,12 +19,26 @@ app.tweets = []
 app.id_count = 1
 
 
+def create_app(test_config = None):
+    app = Flask(__name__)
+    
+    if test_config is None:
+        app.config.from_pyfile("config.py")
+    else:
+        app.config.update(test_config)
+        
+    database = create_engine(app.config['DB_URL'], encoding='utf-8', max_overflow=0)
+    app.database = database
+
+    return app
+
+
 @app.route("/ping", methods=["GET"])
 def ping():
     return "pong"
 
 # signup
-# {name, email, password}
+# {name, email, password, profile}
 @app.route("/sign-up", methods=["POST"])
 def sign_up():
     new_user = request.json
