@@ -49,9 +49,13 @@ def tweet():
     if len(tweet) > 300: 
         return 'too long tweet', 400
     # 300자 이하 -> 트윗 저장
-    payload['time'] = time.time()
-    app.tweets.append(jsonify(payload))
-    return '', 200
+    timestamp = time.time()
+    app.tweets.append({
+        'user_id': user_id,
+        'tweet': tweet,
+        'timestamp': timestamp
+    })
+    return jsonify(payload)
 
 # follow
 # {user_id, follow}
@@ -68,7 +72,7 @@ def follow():
         return "You are following a ghost.", 400
     # target id를 follow 목록에 추가
     user = app.users[user_id]
-    user.setdefault('tweet', set()).add(user_id_to_follow)
+    user.setdefault('follow', set()).add(user_id_to_follow)
     return jsonify(user)
 
 
@@ -87,7 +91,7 @@ def unfollow():
         return "You are already not following that ghost.", 400
     # target id를 follow 목록에서 제거
     user = app.users[user_id]
-    user.setdefault('tweet', set()).discard(user_id_to_unfollow)
+    user.setdefault('follow', set()).discard(user_id_to_unfollow)
     return jsonify(user)
 
 
