@@ -20,7 +20,7 @@ app.tweets = []
 app.id_count = 1
 
 
-@app.route("/ping", methods=["get"])
+@app.route("/ping", methods=["GET"])
 def ping():
     return "pong"
 
@@ -54,12 +54,12 @@ def tweet():
     return '', 200
 
 # follow
-# {id, follow}
+# {user_id, follow}
 @app.route("/follow", methods=["POST"])
 def follow():
     # request 객체 받기
     payload = request.json
-    user_id = int(payload['id'])
+    user_id = int(payload['user_id'])
     user_id_to_follow = int(payload['follow'])
     # user id와 target id가 user 테이블에 있는지 확인
     if user_id not in app.users:
@@ -73,12 +73,12 @@ def follow():
 
 
 # unfollow
-# {id, unfollow}
+# {user_id, unfollow}
 @app.route("/unfollow", methods=["POST"])
 def unfollow():
     # request 객체 받기
     payload = request.json
-    user_id = int(payload['id'])
+    user_id = int(payload['user_id'])
     user_id_to_unfollow = int(payload['unfollow'])
     # user id와 target id가 user 테이블에 있는지 확인
     if user_id not in app.users:
