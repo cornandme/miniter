@@ -9,8 +9,6 @@ class CustomJSONEncoder(JSONEncoder):
             return list(obj)
         return JSONEncoder.default(self, obj)
 
-
-
 def get_user(user_id):
     user = current_app.database.execute(text("""
         SELECT
@@ -32,16 +30,6 @@ def get_user(user_id):
         'email': user['email'],
         'profile': user['profile']
     } if user else None
-
-def get_last_user_id():
-    return current_app.database.execute(text("""
-        SELECT
-            id
-        FROM
-            users
-        WHERE
-            id = (SELECT max(id) FROM users)
-    """)).fetchone
 
 def insert_user(user):
     return current_app.database.execute(text("""
@@ -81,7 +69,6 @@ def insert_follow(user_follow):
         )
     """), user_follow)
 
-# todo
 # {user_id, unfollow}
 def delete_follow(user_unfollow):
     return current_app.database.execute(text("""
@@ -89,8 +76,23 @@ def delete_follow(user_unfollow):
         WHERE user_id=:user_id AND follow_user_id=:unfollow
     """), user_unfollow)
 
+# {user_id}
 def get_timeline(user_id):
-    return 
+    return current_app.database.execute(text("""
+        SELECT
+            t.user_id,
+            t.tweet,
+            t.created_at
+        FROM 
+            tweets AS t
+            INNER JOIN users_follow_list AS ufl 
+            ON t.user_id = ufl.follow_user_id
+        WHERE
+            ufl.user_id = :user_id
+            OR t.user_id = :user_id
+        ORDER BY
+            t.created_at DESC
+    """), {'user_id': user_id})
 
 
 def create_app(test_config = None):
@@ -158,19 +160,11 @@ def create_app(test_config = None):
     # timeline
     # {user_id}
     @app.route("/timeline/<int:user_id>", methods=["GET"])
-    def timeline(user_id):
-        # id가 user 테이블에 있는지 확인
-        if user_id not in app.users:
-            return "Not authorized user.", 400
-        # tweet 테이블에서, 요청 id 또는 follow set에 있는 id가 작성자인 트윗 가져오기
-        valid_set = app.users[user_id].get('follow', set())
-        valid_set.add(user_id)
-        timeline_li = [tweet for tweet in app.tweets if tweet['user_id'] in valid_set]
-        return jsonify({
-            'user_id': user_id,
-            'timeline': timeline_li
-        })
+    def timeline(user_id):            
+        timeline_info = get_timeline(user_id).fetchall()
+        result = [{'user_id':tweet['user_id'],
+                    'tweet':tweet['tweet'],
+                    'created_at':tweet['created_at']} for tweet in timeline_info]
+        return jsonify(result)
 
     return app
-
-
