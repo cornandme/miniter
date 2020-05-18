@@ -1,4 +1,9 @@
+SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS users_follow_list;
+DROP TABLE IF EXISTS tweets;
+SET FOREIGN_KEY_CHECKS = 1;
+
 CREATE TABLE users(
     id INT NOT NULL AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
@@ -11,7 +16,6 @@ CREATE TABLE users(
     UNIQUE KEY email (email)
 );
 
-DROP TABLE IF EXISTS users_follow_list;
 CREATE TABLE users_follow_list(
     user_id INT NOT NULL,
     follow_user_id INT NOT NULL,
@@ -21,7 +25,6 @@ CREATE TABLE users_follow_list(
     CONSTRAINT users_follow_list_follow_user_id_fkey FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
-DROP TABLE IF EXISTS tweets;
 CREATE TABLE tweets(
     id INT NOT NULL AUTO_INCREMENT,
     user_id INT NOT NULL,
