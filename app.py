@@ -72,7 +72,7 @@ def insert_tweet(user_tweet):
 # {user_id, follow}
 def insert_follow(user_follow):
     return current_app.database.execute(text("""
-        INSERT INTO user_follow_list (
+        INSERT INTO users_follow_list (
             user_id,
             follow_user_id
         ) VALUES (
@@ -140,18 +140,9 @@ def create_app(test_config = None):
     @app.route("/follow", methods=["POST"])
     def follow():
         # request 객체 받기
-        payload = request.json
-        user_id = int(payload['user_id'])
-        user_id_to_follow = int(payload['follow'])
-        # user id와 target id가 user 테이블에 있는지 확인
-        if user_id not in app.users:
-            return "Not authorized user.", 400
-        if user_id_to_follow not in app.users:
-            return "You are following a ghost.", 400
-        # target id를 follow 목록에 추가
-        user = app.users[user_id]
-        user.setdefault('follow', set()).add(user_id_to_follow)
-        return jsonify(user)
+        user_follow = request.json
+        follow_info = insert_follow(user_follow).rowcount
+        return '', 200
 
 
     # unfollow
