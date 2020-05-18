@@ -135,15 +135,6 @@ def create_app(test_config = None):
         insert_tweet(user_tweet)
         return '', 200
 
-
-        timestamp = time.time()
-        app.tweets.append({
-            'user_id': user_id,
-            'tweet': tweet,
-            'timestamp': timestamp
-        })
-        return jsonify(payload)
-
     # follow
     # {user_id, follow}
     @app.route("/follow", methods=["POST"])
