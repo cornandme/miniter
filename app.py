@@ -126,16 +126,16 @@ def create_app(test_config = None):
     @app.route("/tweet", methods=["POST"])
     def tweet():
         # request 객체 받기
-        payload = request.json
-        user_id = int(payload['user_id'])
-        tweet = payload['tweet']
-        # id가 있는지 검사
-        if user_id not in app.users:
-            return 'Not authorized user', 400
+        user_tweet = request.json
+        tweet = user_tweet['tweet']
         # 300자 초과인지 검사
         if len(tweet) > 300: 
             return 'too long tweet', 400
-        # 300자 이하 -> 트윗 저장
+        # 트윗 저장
+        insert_tweet(user_tweet)
+        return '', 200
+
+
         timestamp = time.time()
         app.tweets.append({
             'user_id': user_id,
