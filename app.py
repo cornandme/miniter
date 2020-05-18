@@ -83,8 +83,11 @@ def insert_follow(user_follow):
 
 # todo
 # {user_id, unfollow}
-def insert_unfollow(user_unfollow):
-    return 
+def delete_follow(user_unfollow):
+    return current_app.database.execute(text("""
+        DELETE FROM users_follow_list
+        WHERE user_id=:user_id AND follow_user_id=:unfollow
+    """), user_unfollow)
 
 def get_timeline(user_id):
     return 
@@ -139,30 +142,18 @@ def create_app(test_config = None):
     # {user_id, follow}
     @app.route("/follow", methods=["POST"])
     def follow():
-        # request 객체 받기
         user_follow = request.json
         follow_info = insert_follow(user_follow).rowcount
         return '', 200
-
 
     # unfollow
     # {user_id, unfollow}
     @app.route("/unfollow", methods=["POST"])
     def unfollow():
-        # request 객체 받기
         payload = request.json
-        user_id = int(payload['user_id'])
-        user_id_to_unfollow = int(payload['unfollow'])
-        # user id와 target id가 user 테이블에 있는지 확인
-        if user_id not in app.users:
-            return "Not authorized user.", 400
-        if user_id_to_unfollow not in app.users:
-            return "You are already not following that ghost.", 400
-        # target id를 follow 목록에서 제거
-        user = app.users[user_id]
-        user.setdefault('follow', set()).discard(user_id_to_unfollow)
-        return jsonify(user)
-
+        user_unfollow = request.json
+        unfollow_info = delete_follow(user_unfollow).rowcount
+        return '', 200
 
     # timeline
     # {user_id}
