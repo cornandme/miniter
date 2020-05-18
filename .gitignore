@@ -140,3 +140,4 @@ cython_debug/
 # custom
 cmd.txt
 config.py
+test_sql.py
