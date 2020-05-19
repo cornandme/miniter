@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, current_app
 from flask.json import JSONEncoder
 from sqlalchemy import create_engine, text
 import bcrypt
+from datetime import datetime, timedelta
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
@@ -9,13 +10,10 @@ class CustomJSONEncoder(JSONEncoder):
             return list(obj)
         return JSONEncoder.default(self, obj)
 
-def get_user(user_id):
+def get_user_by_id(user_id):
     user = current_app.database.execute(text("""
         SELECT
-            id,
-            name,
-            email,
-            profile
+            *
         FROM
             users
         WHERE
@@ -23,6 +21,16 @@ def get_user(user_id):
         """), {
             'user_id': user_id
         }).fetchone()
+
+def get_user_by_email(email):
+    user = current_app.database.execute(text("""
+        SELECT
+            *
+        FROM
+            users
+        WHERE
+            id = :email
+    """)).fetchone()
     
     return {
         'id': user['id'],
@@ -122,13 +130,42 @@ def create_app(test_config = None):
         )
         insert_result = insert_user(new_user)
         new_user_id = insert_result.lastrowid
-        created_user = get_user(new_user_id)
+        created_user = get_user_by_id(new_user_id)
         return jsonify({
             created_user['id'],
             created_user['name'],
             created_user['email'],
             created_user['profile']
         })
+
+    @app.route("/login", methods=["POST"])
+    def login():
+        # request info
+        credential = request.json
+        email = credential['email']
+        password = credential['password']
+
+        # db user info
+        user = get_user_by_email(email)
+        user_credential = {
+            'id': user['id'],
+            'hashed_password': user['hashed_password']
+        } if user else None
+
+        # check password
+        if user_credential and bcrypt.checkpw(password.encode('UTF-8'), user_credential['hashed_password'].encode('UTF-8')):
+            # create token
+            user_id = user_credential['id']
+            payload = {
+                'user_id': user_id,
+                'exp': datetime.utcnow() + timedelta(seconds = 60 * 60 * 24)
+            }
+            token = jwt.encode(payload, app.config['JWT_SECRET_KEY'], 'HS256')
+            return jsonify({
+                'access_token': token.decode('UTF-8')
+            })
+        else:
+            return '', 401
 
     # tweet
     # {user_id, tweet}
