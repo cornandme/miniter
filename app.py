@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, current_app
 from flask.json import JSONEncoder
 from sqlalchemy import create_engine, text
+import bcrypt
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
@@ -41,7 +42,7 @@ def insert_user(user):
             :name,
             :email,
             :profile,
-            :hashed_password
+            :password
         )
     """), user)
 
@@ -115,6 +116,10 @@ def create_app(test_config = None):
     @app.route("/sign-up", methods=["POST"])
     def sign_up():
         new_user = request.json
+        new_user['password'] = bcrypt.hashpw(
+            new_user['password'].encode('UTF-8'),
+            bcrypt.gensalt()
+        )
         insert_result = insert_user(new_user)
         new_user_id = insert_result.lastrowid
         created_user = get_user(new_user_id)
