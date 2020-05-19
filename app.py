@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, request, current_app
 from flask.json import JSONEncoder
 from sqlalchemy import create_engine, text
-import time
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
@@ -85,7 +84,7 @@ def get_timeline(user_id):
             t.created_at
         FROM 
             tweets AS t
-            INNER JOIN users_follow_list AS ufl 
+            LEFT OUTER JOIN users_follow_list AS ufl 
             ON t.user_id = ufl.follow_user_id
         WHERE
             ufl.user_id = :user_id
