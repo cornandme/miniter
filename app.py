@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from flask import Flask, jsonify, request, current_app, Response, g
 from flask.json import JSONEncoder
+from flask_cors import CORS
 
 from sqlalchemy import create_engine, text
 
@@ -119,6 +120,7 @@ def login_required(f):
 
 def create_app(test_config = None):
     app = Flask(__name__)
+    CORS(app)
     app.json_encoder = CustomJSONEncoder
     
     if test_config is None:
@@ -219,9 +221,9 @@ def create_app(test_config = None):
         unfollow_info = delete_follow(user_unfollow).rowcount
         return '', 200
 
-    @app.route("/timeline/<int:user_id>", methods=["GET"])
+    @app.route("/timeline", methods=["GET"])
     @login_required
-    def timeline(user_id):
+    def timeline():
         user_id = g.user_id
         timeline_info = get_timeline(user_id).fetchall()
         result = [{'user_id':tweet['user_id'],
