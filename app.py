@@ -3,7 +3,7 @@ import bcrypt
 from functools import wraps
 from datetime import datetime, timedelta
 
-from flask import Flask, jsonify, request, current_app, Response
+from flask import Flask, jsonify, request, current_app, Response, g
 from flask.json import JSONEncoder
 
 from sqlalchemy import create_engine, text
@@ -60,7 +60,6 @@ def insert_tweet(user_tweet):
         )
     """), user_tweet)
 
-# {user_id, follow}
 def insert_follow(user_follow):
     return current_app.database.execute(text("""
         INSERT INTO users_follow_list (
@@ -72,14 +71,12 @@ def insert_follow(user_follow):
         )
     """), user_follow)
 
-# {user_id, unfollow}
 def delete_follow(user_unfollow):
     return current_app.database.execute(text("""
         DELETE FROM users_follow_list
         WHERE user_id=:user_id AND follow_user_id=:unfollow
     """), user_unfollow)
 
-# {user_id}
 def get_timeline(user_id):
     return current_app.database.execute(text("""
         SELECT
@@ -155,6 +152,7 @@ def create_app(test_config = None):
             created_user['profile']
         })
 
+    # {email, password}
     @app.route("/login", methods=["POST"])
     def login():
         # request info
@@ -177,52 +175,54 @@ def create_app(test_config = None):
                 'user_id': user_id,
                 'exp': datetime.utcnow() + timedelta(seconds = 60 * 60 * 24)
             }
-            token = jwt.encode(payload, app.config['JWT_SECRET_KEY'], 'HS256')
+            token = jwt.encode(
+                payload, 
+                app.config['JWT_SECRET_KEY'], 
+                'HS256'
+            )
             return jsonify({
                 'access_token': token.decode('UTF-8')
             })
         else:
             return '', 401
 
-    # tweet
-    # {user_id, tweet}
+    # {tweet}
     @app.route("/tweet", methods=["POST"])
     @login_required
     def tweet():
         # request 객체 받기
         user_tweet = request.json
+        user_tweet['user_id'] = g.user_id
         tweet = user_tweet['tweet']
         # 300자 초과인지 검사
         if len(tweet) > 300: 
-            return 'too long tweet', 400
+            return 'Too long tweet.', 400
         # 트윗 저장
         insert_tweet(user_tweet)
         return '', 200
 
-    # follow
-    # {user_id, follow}
+    # {follow}
     @app.route("/follow", methods=["POST"])
     @login_required
     def follow():
         user_follow = request.json
+        user_follow['user_id'] = g.user_id
         follow_info = insert_follow(user_follow).rowcount
         return '', 200
 
-    # unfollow
-    # {user_id, unfollow}
+    # {unfollow}
     @app.route("/unfollow", methods=["POST"])
     @login_required
     def unfollow():
-        payload = request.json
         user_unfollow = request.json
+        user_unfollow['user_id'] = g.user_id
         unfollow_info = delete_follow(user_unfollow).rowcount
         return '', 200
 
-    # timeline
-    # {user_id}
     @app.route("/timeline/<int:user_id>", methods=["GET"])
     @login_required
-    def timeline(user_id):            
+    def timeline(user_id):
+        user_id = g.user_id
         timeline_info = get_timeline(user_id).fetchall()
         result = [{'user_id':tweet['user_id'],
                     'tweet':tweet['tweet'],
