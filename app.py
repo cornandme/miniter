@@ -3,7 +3,7 @@ import bcrypt
 from functools import wraps
 from datetime import datetime, timedelta
 
-from flask import Flask, jsonify, request, current_app
+from flask import Flask, jsonify, request, current_app, Response
 from flask.json import JSONEncoder
 
 from sqlalchemy import create_engine, text
@@ -15,33 +15,24 @@ class CustomJSONEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 def get_user_by_id(user_id):
-    user = current_app.database.execute(text("""
+    return current_app.database.execute(text("""
         SELECT
             *
         FROM
             users
         WHERE
             id = :user_id
-        """), {
-            'user_id': user_id
-        }).fetchone()
+        """), {'user_id': user_id}).fetchone()
 
 def get_user_by_email(email):
-    user = current_app.database.execute(text("""
+    return current_app.database.execute(text("""
         SELECT
             *
         FROM
             users
         WHERE
-            id = :email
-    """)).fetchone()
-    
-    return {
-        'id': user['id'],
-        'name': user['name'],
-        'email': user['email'],
-        'profile': user['profile']
-    } if user else None
+            email = :email
+    """), {'email': email}).fetchone()
 
 def insert_user(user):
     return current_app.database.execute(text("""
@@ -106,6 +97,28 @@ def get_timeline(user_id):
             t.created_at DESC
     """), {'user_id': user_id})
 
+# decorators
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        access_token = request.headers.get('Authorization')
+        if access_token is not None:
+            try:
+                payload = jwt.decode(access_token, current_app.config['JWT_SECRET_KEY'], 'HS256')
+            except jwt.InvalidTokenError:
+                payload = None
+
+            if payload is None:
+                return Response(status=401)
+
+            user_id = payload['user_id']
+            g.user_id = user_id
+            g.user = get_user_by_id(user_id) if user_id else None
+        else:
+            return Response(status=401)
+        
+        return f(*args, **kwargs)
+    return decorated_function
 
 def create_app(test_config = None):
     app = Flask(__name__)
@@ -174,6 +187,7 @@ def create_app(test_config = None):
     # tweet
     # {user_id, tweet}
     @app.route("/tweet", methods=["POST"])
+    @login_required
     def tweet():
         # request 객체 받기
         user_tweet = request.json
@@ -188,6 +202,7 @@ def create_app(test_config = None):
     # follow
     # {user_id, follow}
     @app.route("/follow", methods=["POST"])
+    @login_required
     def follow():
         user_follow = request.json
         follow_info = insert_follow(user_follow).rowcount
@@ -196,6 +211,7 @@ def create_app(test_config = None):
     # unfollow
     # {user_id, unfollow}
     @app.route("/unfollow", methods=["POST"])
+    @login_required
     def unfollow():
         payload = request.json
         user_unfollow = request.json
@@ -205,6 +221,7 @@ def create_app(test_config = None):
     # timeline
     # {user_id}
     @app.route("/timeline/<int:user_id>", methods=["GET"])
+    @login_required
     def timeline(user_id):            
         timeline_info = get_timeline(user_id).fetchall()
         result = [{'user_id':tweet['user_id'],
