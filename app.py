@@ -221,9 +221,18 @@ def create_app(test_config = None):
         unfollow_info = delete_follow(user_unfollow).rowcount
         return '', 200
 
+    @app.route('/timeline/<int:user_id>', methods=['GET'])
+    @login_required
+    def timeline(user_id):
+        timeline_info = get_timeline(user_id).fetchall()
+        result = [{'user_id':tweet['user_id'],
+                    'tweet':tweet['tweet'],
+                    'created_at':tweet['created_at']} for tweet in timeline_info]
+        return jsonify(result)
+
     @app.route("/timeline", methods=["GET"])
     @login_required
-    def timeline():
+    def user_timeline():
         user_id = g.user_id
         timeline_info = get_timeline(user_id).fetchall()
         result = [{'user_id':tweet['user_id'],
