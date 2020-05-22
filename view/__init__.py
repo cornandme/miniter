@@ -48,9 +48,6 @@ def create_endpoints(app, services):
     # {name, email, password, profile}
     @app.route("/sign-up", methods=["POST"])
     def sign_up():
-        # user.encrypt_password
-        # user.create_new_user
-        # user.get_user_by_id
         new_user = request.json
         new_user['password'] = encrypt_password(new_user['password'])
         insert_obj = user_service.create_new_user(new_user)
@@ -67,8 +64,6 @@ def create_endpoints(app, services):
     # {email, password}
     @app.route("/login", methods=["POST"])
     def login():
-        # user.authorize
-        # user.get_token
         credential = request.json
         authorized, user_id = user_service.authorize(credential)
         
@@ -85,8 +80,6 @@ def create_endpoints(app, services):
     @app.route("/tweet", methods=["POST"])
     @login_required
     def tweet():
-        # tweet.tweet_check
-        # tweet.insert_tweet
         user_tweet = request.json
         user_id = g.user_id
         tweet = user_tweet['tweet']
@@ -103,7 +96,6 @@ def create_endpoints(app, services):
     @app.route("/follow", methods=["POST"])
     @login_required
     def follow():
-        # user.follow
         user_follow = request.json
         user_id = g.user_id
         follow_id = user_follow['follow']
@@ -115,7 +107,6 @@ def create_endpoints(app, services):
     @app.route("/unfollow", methods=["POST"])
     @login_required
     def unfollow():
-        # user.unfollow
         user_unfollow = request.json
         user_id = g.user_id
         unfollow_id = user_unfollow['unfollow']
@@ -125,7 +116,6 @@ def create_endpoints(app, services):
 
     @app.route('/timeline/<int:user_id>', methods=['GET'])
     def timeline(user_id):
-        # tweet.get_timeline
         timeline = tweet_service.get_timeline(user_id)
         return jsonify({
             'user_id': user_id,
