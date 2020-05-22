@@ -15,4 +15,4 @@ class TweetService:
 
     def get_timeline(self, user_id):
         # tweetdao.get_timeline
-        return self.tweet_dao.get_timeline(user_id)
+        return self.tweet_dao.get_timeline(user_id).fetchall()
