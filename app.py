@@ -141,17 +141,17 @@ def create_app(test_config = None):
     def sign_up():
         new_user = request.json
         new_user['password'] = bcrypt.hashpw(
-            new_user['password'].encode('UTF-8'),
+            new_user['password'].encode('utf-8'),
             bcrypt.gensalt()
         )
         insert_result = insert_user(new_user)
         new_user_id = insert_result.lastrowid
         created_user = get_user_by_id(new_user_id)
         return jsonify({
-            created_user['id'],
-            created_user['name'],
-            created_user['email'],
-            created_user['profile']
+            'id': created_user['id'],
+            'name': created_user['name'],
+            'email': created_user['email'],
+            'profile': created_user['profile']
         })
 
     # {email, password}
@@ -170,7 +170,7 @@ def create_app(test_config = None):
         } if user else None
 
         # check password
-        if user_credential and bcrypt.checkpw(password.encode('UTF-8'), user_credential['hashed_password'].encode('UTF-8')):
+        if user_credential and bcrypt.checkpw(password.encode('utf-8'), user_credential['hashed_password'].encode('utf-8')):
             # create token
             user_id = user_credential['id']
             payload = {
@@ -183,7 +183,8 @@ def create_app(test_config = None):
                 'HS256'
             )
             return jsonify({
-                'access_token': token.decode('UTF-8')
+                'user_id': user_id,
+                'access_token': token.decode('utf-8')
             })
         else:
             return '', 401
@@ -225,19 +226,25 @@ def create_app(test_config = None):
     @login_required
     def timeline(user_id):
         timeline_info = get_timeline(user_id).fetchall()
-        result = [{'user_id':tweet['user_id'],
-                    'tweet':tweet['tweet'],
-                    'created_at':tweet['created_at']} for tweet in timeline_info]
-        return jsonify(result)
+        result = [{'tweet': tweet['tweet'],
+                    'user_id': tweet['user_id'],
+                    'created_at': tweet['created_at']} for tweet in timeline_info]
+        return jsonify({
+            'user_id': user_id,
+            'timeline': result
+        })
 
     @app.route("/timeline", methods=["GET"])
     @login_required
     def user_timeline():
         user_id = g.user_id
         timeline_info = get_timeline(user_id).fetchall()
-        result = [{'user_id':tweet['user_id'],
-                    'tweet':tweet['tweet'],
+        result = [{'tweet':tweet['tweet'],
+                    'user_id': tweet['user_id'],
                     'created_at':tweet['created_at']} for tweet in timeline_info]
-        return jsonify(result)
+        return jsonify({
+            'user_id': user_id,
+            'timeline': result
+        })
 
     return app
