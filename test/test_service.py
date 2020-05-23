@@ -124,47 +124,32 @@ def test_get_user_by_id(user_service):
     pass
 
 def test_authorize(user_service):
-    # bug search
-    credential = {
-        'email': 'test01@gmail.com',
-        'password': 'testpw01'
-    }
-    email = credential['email']
-    password = credential['password']
-    
-    user = user_service.user_dao.get_user_by_email(email)
-    user_dict = {
-        'id': user['id'],
-        'email': user['email'],
-    }
-    assert user_dict == {
-        'id': 1,
-        'email': 'test01@gmail.com'
-    }
-
     # case 1: use user 1's credential
     credential = {
         'email': 'test01@gmail.com',
         'password': 'testpw01'
     }
-    authorized = user_service.authorize(credential)
+    authorized, user_id = user_service.authorize(credential)
     assert authorized == True
+    assert user_id == 1
 
     # case 2: correct email, fake password
     credential = {
         'email': 'test01@gmail.com',
         'password': 'fakepw'
     }
-    authorized = user_service.authorize(credential)
+    authorized, user_id = user_service.authorize(credential)
     assert authorized == False
+    assert user_id == 1
 
     # case 3: false email
     credential = {
         'email': 'rainbow@yahoo.co.kr',
         'password': 'yaho'
     }
-    authorized = user_service.authorize(credential)
+    authorized, user_id = user_service.authorize(credential)
     assert authorized == False
+    assert user_id == False
 
 def test_get_user_id(user_service):
     # user 1

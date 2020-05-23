@@ -36,8 +36,9 @@ class UserService:
             'hashed_password': user['hashed_password']
         } if user else False
 
+        user_id = user['id'] if user else False
         authorized = user_credential and bcrypt.checkpw(password.encode('utf-8'), user_credential['hashed_password'].encode('utf-8'))
-        return authorized
+        return authorized, user_id
 
     def get_user_id(self, email):
         user = self.user_dao.get_user_by_email(email)

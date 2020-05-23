@@ -65,10 +65,10 @@ def create_endpoints(app, services):
     @app.route("/login", methods=["POST"])
     def login():
         credential = request.json
-        authorized = user_service.authorize(credential)
+        authorized, user_id = user_service.authorize(credential)
         
         if authorized:
-            user_id = user_service.get_user_id(credential['email'])
+            # user_id = user_service.get_user_id(credential['email'])
             token = user_service.generate_access_token(user_id)
             return jsonify({
                 'user_id': user_id,
