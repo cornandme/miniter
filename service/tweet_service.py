@@ -10,9 +10,11 @@ class TweetService:
         return 'ok'
 
     def insert_tweet(self, user_id, tweet):
-        # tweetdao.insert_tweet
         self.tweet_dao.insert_tweet(user_id, tweet)
 
     def get_timeline(self, user_id):
-        # tweetdao.get_timeline
-        return self.tweet_dao.get_timeline(user_id).fetchall()
+        raw_timeline = self.tweet_dao.get_timeline(user_id).fetchall()
+        timeline = [{'tweet': tweet['tweet'],
+                    'user_id': tweet['user_id'],
+                    'created_at': tweet['created_at']} for tweet in raw_timeline]
+        return timeline

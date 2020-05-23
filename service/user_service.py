@@ -59,12 +59,3 @@ class UserService:
     def unfollow(self, user_id, unfollow_id):
         # userdao.insert_follow
         self.user_dao.delete_follow(user_id, unfollow_id)
-
-    def get_timeline(self, user_id):
-        # userdao.get_timeline
-        raw_timeline = self.user_dao.get_timeline(user_id)
-        timeline = [{'tweet': tweet['tweet'],
-                    'user_id': tweet['user_id'],
-                    'created_at': tweet['created_at']} for tweet in raw_timeline]
-        return timeline
-

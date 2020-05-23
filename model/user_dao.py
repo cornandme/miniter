@@ -50,7 +50,7 @@ class UserDAO:
             )
         """), {
             'user_id': user_id,
-            'follow_id': follow_id
+            'follow': follow_id
         })
 
     def delete_follow(self, user_id, unfollow_id):
@@ -61,20 +61,3 @@ class UserDAO:
             'user_id': user_id,
             'unfollow': unfollow_id
         })
-
-    def get_timeline(self, user_id):
-        return self.database.execute(text("""
-            SELECT
-                t.user_id,
-                t.tweet,
-                t.created_at
-            FROM 
-                tweets AS t
-                LEFT OUTER JOIN users_follow_list AS ufl 
-                ON t.user_id = ufl.follow_user_id
-            WHERE
-                ufl.user_id = :user_id
-                OR t.user_id = :user_id
-            ORDER BY
-                t.created_at DESC
-        """), {'user_id': user_id}).fetchall()
