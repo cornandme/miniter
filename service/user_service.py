@@ -34,23 +34,27 @@ class UserService:
         user_credential = {
             'id': user['id'],
             'hashed_password': user['hashed_password']
-        } if user else None
+        } if user else False
 
-        user_id = user_credential['id'] if user_credential else None
         authorized = user_credential and bcrypt.checkpw(password.encode('utf-8'), user_credential['hashed_password'].encode('utf-8'))
-        return authorized, user_id
+        return authorized
 
-    def get_token(self, user_id):
+    def get_user_id(self, email):
+        user = self.user_dao.get_user_by_email(email)
+        user_id = user['id']
+        return user_id
+
+    def generate_access_token(self, user_id):
         payload = {
             'user_id': user_id,
             'exp': datetime.utcnow() + timedelta(seconds = 60 * 60 * 24)
         }
         token = jwt.encode(
             payload, 
-            app.config['JWT_SECRET_KEY'], 
+            self.config['JWT_SECRET_KEY'], 
             'HS256'
         )
-        return token
+        return token.decode('utf-8')
 
     def follow(self, user_id, follow_id):
         # userdao.insert_follow

@@ -49,7 +49,7 @@ def create_endpoints(app, services):
     @app.route("/sign-up", methods=["POST"])
     def sign_up():
         new_user = request.json
-        new_user['password'] = encrypt_password(new_user['password'])
+        new_user['password'] = user_service.encrypt_password(new_user['password'])
         insert_obj = user_service.create_new_user(new_user)
         created_user_id = user_service.get_created_user_id(insert_obj)
         created_user = user_service.get_user_by_id(created_user_id)
@@ -65,13 +65,14 @@ def create_endpoints(app, services):
     @app.route("/login", methods=["POST"])
     def login():
         credential = request.json
-        authorized, user_id = user_service.authorize(credential)
+        authorized = user_service.authorize(credential)
         
         if authorized:
-            token = user_service.get_token(user_id)
+            user_id = user_service.get_user_id(credential['email'])
+            token = user_service.generate_access_token(user_id)
             return jsonify({
                 'user_id': user_id,
-                'token': token
+                'access_token': token
             })
         else:
             return '', 401

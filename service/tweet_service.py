@@ -6,7 +6,7 @@ class TweetService:
 
     def tweet_check(self, tweet):
         if len(tweet) > 300:
-            return 'Too long tweet.', 400
+            return 'Too long tweet.'
         return 'ok'
 
     def insert_tweet(self, user_id, tweet):
