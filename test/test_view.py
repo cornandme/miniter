@@ -10,7 +10,6 @@ from app import create_app
 
 database = create_engine(config.test_config['DB_URL'], encoding='utf-8', max_overflow=0)
 
-
 @pytest.fixture
 def api():
     app = create_app(config.test_config)
@@ -242,20 +241,6 @@ def test_authorization(api):
             'user_id': 3,
             'unfollow': 2
         }),
-        content_type = 'application/json',
-        headers = {'Authorization': 'faketoken'}
-    )
-    assert res.status_code == 401
-
-    # timeline
-    res = api.get(
-        '/timeline/1',
-        content_type = 'application/json'
-    )
-    assert res.status_code == 401
-
-    res = api.get(
-        '/timeline/1',
         content_type = 'application/json',
         headers = {'Authorization': 'faketoken'}
     )
