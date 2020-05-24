@@ -141,4 +141,5 @@ cython_debug/
 .vscode
 cmd.txt
 config.py
+config_production.py
 test_sql.py
