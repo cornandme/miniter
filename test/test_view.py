@@ -140,28 +140,6 @@ def test_signup(api):
     )
     assert res.status_code == 200
 
-    # DB check
-    row = database.execute(text("""
-        SELECT
-            *
-        FROM
-            users
-        WHERE
-            id = 4
-    """)).fetchone()
-    row_dict = {
-        'id': row['id'],
-        'name': row['name'],
-        'email': row['email'],
-        'profile': row['profile']
-    }
-    assert row_dict == {
-        'id': 4,
-        'name': 'testname04',
-        'email': 'test04@gmail.com',
-        'profile': 'test profile 04'
-    }
-
     # login check
     res = api.post(
         '/login',
@@ -287,24 +265,6 @@ def test_tweet(api):
     )
     assert res.status_code == 200
 
-    # check DB
-    row = database.execute(text("""
-        SELECT
-            *
-        FROM
-            tweets
-        WHERE
-            user_id = :user_id
-    """), {'user_id': user_id}).fetchone()
-    row_dict = {
-        'user_id': row['user_id'],
-        'tweet': row['tweet']
-    }
-    assert row_dict == {
-        'user_id': 1,
-        'tweet': 'test tweet 01'
-    }
-
 def test_timeline(api):
     # login user 1
     res = api.post(
@@ -392,24 +352,6 @@ def test_follow(api):
     )
     assert res.status_code == 200
 
-    # check DB
-    row = database.execute(text("""
-        SELECT
-            *
-        FROM
-            users_follow_list
-        WHERE
-            user_id = :user_id
-    """), {'user_id': user_id}).fetchone()
-    row_dict = {
-        'user_id': row['user_id'],
-        'follow_user_id': row['follow_user_id']
-    }
-    assert row_dict == {
-        'user_id': user_id,
-        'follow_user_id': 2
-    }
-
     # check timeline if there is a tweet of user 2
     res = api.get(
         '/timeline',
@@ -457,17 +399,6 @@ def test_unfollow(api):
         headers = {'Authorization': access_token}
     )
     assert res.status_code == 200
-
-    # check DB
-    row = database.execute(text("""
-        SELECT
-            *
-        FROM
-            users_follow_list
-        WHERE
-            user_id = :user_id
-    """), {'user_id': user_id}).fetchone()
-    assert row == None
 
     # check timeline if there is any tweet
     res = api.get(
