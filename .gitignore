@@ -139,6 +139,7 @@ cython_debug/
 
 # custom
 .vscode
+.sh
 cmd.txt
 config.py
 config_production.py
