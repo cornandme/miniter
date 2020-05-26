@@ -1,6 +1,8 @@
 from flask import Flask
 from flask_cors import CORS
 from sqlalchemy import create_engine
+import boto3
+import botocore
 
 import config
 from model import UserDAO, TweetDAO
@@ -26,8 +28,14 @@ def create_app(test_config = None):
     tweet_dao = TweetDAO(database)
 
     # business layer
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id = app.config['S3_ACCESS_KEY'],
+        aws_secret_access_key = app.config['S3_SECRET_KEY']
+    )
+
     services = Services
-    services.user_service = UserService(user_dao, app.config)
+    services.user_service = UserService(user_dao, app.config, s3_client)
     services.tweet_service = TweetService(tweet_dao)
 
     create_endpoints(app, services)

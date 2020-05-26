@@ -61,3 +61,25 @@ class UserDAO:
             'user_id': user_id,
             'unfollow': unfollow_id
         })
+
+    def update_profile_picture(self, image_url, user_id):
+        return self.database.execute(text("""
+            UPDATE users
+            SET profile_picture = :image_url
+            WHERE id = :user_id
+        """), {
+            'user_id': user_id,
+            'image_url': image_url
+        })
+
+    def get_profile_picture(self, user_id):
+        row = self.database.execute(text("""
+            SELECT
+                profile_picture
+            FROM
+                users
+            WHERE
+                id = :user_id
+        """), {'user_id': user_id}).fetchone()
+
+        return row['profile_picture'] if row else None
