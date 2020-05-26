@@ -276,3 +276,29 @@ def test_get_timeline(tweet_dao):
             'tweet': 'test tweet user 2'
         }
     ]
+
+def test_get_and_update_profile_picture(user_dao):
+    # input
+    user_id = 1
+    image_url = 'https://miniter-static.s3.ap-northeast-2.amazonaws.com/profile_image/1.png'
+
+    # get empty profile image
+    result = user_dao.get_profile_picture(user_id)
+    assert result is None
+
+    # update profile image
+    user_dao.update_profile_picture(image_url, user_id)
+    
+    result = database.execute(text("""
+        SELECT
+            *
+        FROM
+            users
+        WHERE
+            id = :user_id
+    """), {'user_id': user_id}).fetchone()
+    assert result['id'] == user_id
+    assert result['profile_picture'] == image_url
+
+    result = user_dao.get_profile_picture(user_id)
+    assert result == image_url

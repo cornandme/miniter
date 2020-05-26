@@ -4,6 +4,7 @@ import time
 
 import pytest
 from sqlalchemy import create_engine, text
+from unittest import mock
 
 import config
 from model import UserDAO, TweetDAO
@@ -13,7 +14,8 @@ database = create_engine(config.test_config['DB_URL'], encoding='utf-8', max_ove
 
 @pytest.fixture
 def user_service():
-    return UserService(UserDAO(database), config.test_config)
+    mock_s3_client = mock.Mock()
+    return UserService(UserDAO(database), config.test_config, mock_s3_client)
 
 @pytest.fixture
 def tweet_service():
@@ -185,3 +187,20 @@ def test_insert_tweet(tweet_service):
 
 def test_get_timeline(tweet_service):
     pass
+
+def test_get_and_save_profile_picture(user_service):
+    # input
+    user_id = 1
+    test_pic = mock.Mock()
+    image_url = f"{config.test_config['S3_BUCKET_URL']}{'profile_image/'}{user_id}{'.png'}"
+
+    # get empty url
+    result = user_service.get_profile_picture(user_id)
+    assert result is None
+
+    # save picture
+    user_service.save_profile_picture(test_pic, user_id)
+
+    # get url
+    result = user_service.get_profile_picture(user_id)
+    assert result == image_url

@@ -2,8 +2,10 @@ import json
 import bcrypt
 import time
 
-import pytest
 from sqlalchemy import create_engine, text
+import pytest
+from unittest import mock
+import io
 
 import config
 from app import create_app
@@ -11,7 +13,10 @@ from app import create_app
 database = create_engine(config.test_config['DB_URL'], encoding='utf-8', max_overflow=0)
 
 @pytest.fixture
-def api():
+@mock.patch("app.boto3")
+def api(mock_boto3):
+    mock_boto3.client.return_value = mock.Mock()
+
     app = create_app(config.test_config)
     app.config['TEST'] = True
     api = app.test_client()
@@ -412,3 +417,47 @@ def test_unfollow(api):
         'user_id': 3,
         'timeline': []
     }
+
+def test_upload_profile_picture(api):
+    # user 1 uploads a profile picture
+
+
+    # login
+    res = api.post(
+        '/login',
+        data = json.dumps({
+            'email': 'test01@gmail.com',
+            'password': 'testpw01'
+        }),
+        content_type = 'application/json'
+    )
+    login_info = json.loads(res.data.decode('utf-8'))
+    user_id = login_info['user_id']
+    access_token = login_info['access_token']
+    assert res.status_code == 200
+    assert b'access_token' in res.data
+
+    # get empty url
+    res = api.get(
+        f"/profile-picture/{user_id}",
+        content_type = 'application/json'
+    )
+    assert res.status_code == 404
+
+    # upload
+    res = api.post(
+        '/profile-picture',
+        content_type = 'multipart/form-data',
+        headers = {'Authorization': access_token},
+        data = {'profile_pic': (io.BytesIO(b'test image'), 'test_profile.jpg')}
+    )
+    assert res.status_code == 200
+
+    # get image url
+    image_url = f"{config.test_config['S3_BUCKET_URL']}{'profile_image/'}{user_id}{'.png'}"
+    res = api.get(f"/profile-picture/{user_id}")
+    data = json.loads(res.data.decode('utf-8'))
+    assert res.status_code == 200
+    assert data['image_url'] == image_url
+
+
